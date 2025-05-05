@@ -1,0 +1,138 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String    @id @default(cuid())
+  email         String    @unique
+  passwordHash  String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  roles         UserRole[]
+  guilds        UserGuild[]
+  payments      Payment[]
+  profile       FamilyCensus?
+  otpCode       OtpCode?
+}
+
+model UserRole {
+  id        String   @id @default(cuid())
+  userId    String
+  role      String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, role])
+}
+
+model Guild {
+  id          String      @id @default(cuid())
+  name        String      @unique
+  description String?
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+  users       UserGuild[]
+  fees        Fee[]
+  documents   Document[]
+}
+
+model UserGuild {
+  id        String   @id @default(cuid())
+  userId    String
+  guildId   String
+  joinedAt  DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  guild     Guild    @relation(fields: [guildId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, guildId])
+}
+
+model Fee {
+  id          String    @id @default(cuid())
+  guildId     String
+  description String
+  amount      Decimal   @db.Decimal(10, 2)
+  frequency   String
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  guild       Guild     @relation(fields: [guildId], references: [id], onDelete: Cascade)
+  payments    Payment[]
+}
+
+model Payment {
+  id           String   @id @default(cuid())
+  userId       String
+  feeId        String
+  amountPaid   Decimal  @db.Decimal(10, 2)
+  paymentDate  DateTime @default(now())
+  receiptNumber String?
+  paymentMethod String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  fee          Fee      @relation(fields: [feeId], references: [id], onDelete: Cascade)
+}
+
+model Document {
+  id          String   @id @default(cuid())
+  guildId     String?
+  name        String
+  description String?
+  fileUrl     String
+  fileType    String
+  fileSize    Int
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  guild       Guild?   @relation(fields: [guildId], references: [id], onDelete: SetNull)
+}
+
+model FamilyCensus {
+  id                String    @id @default(cuid())
+  userId            String    @unique
+  title             String?
+  firstName         String
+  middleName        String?
+  surname           String
+  gender            String?
+  dateOfBirth       DateTime?
+  maritalStatus     String?
+  typeOfMarriage    String?
+  placeOfMarriage   String?
+  marriageNumber    String?
+  marriedTo         String?
+  address           String?
+  phoneCellNumber   String?
+  sectionName       String?
+  emailAddress      String
+  placeOfBaptism    String?
+  baptismNumber     String?
+  groupsGuild       String?
+  occupation        String?
+  skills            String?
+  profession        String?
+  churchSupportCard String?
+  lastPaid          DateTime?
+  anyOtherComments  String?
+  dateOfSubmission  DateTime  @default(now())
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+  user              User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model OtpCode {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  otp       String
+  createdAt DateTime @default(now())
+  expiresAt DateTime
+  user      User     @relation(fields: [email], references: [email], onDelete: Cascade)
+}
