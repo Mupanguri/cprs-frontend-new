@@ -1,9 +1,8 @@
 "use client"
 
 import type React from "react"
-
-import { useState } from "react"
-import { usePathname } from "next/navigation"
+import { useSession, signOut } from "next-auth/react" // Import useSession and signOut
+import { usePathname, useRouter } from "next/navigation" // Import useRouter for redirect
 import { ModeToggle } from "@/components/mode-toggle"
 import { Button } from "@/components/ui/button"
 import {
@@ -17,9 +16,11 @@ import {
   SidebarProvider,
   SidebarTrigger,
 } from "@/components/ui/sidebar"
-import { Home, User, FileText, Calendar, CreditCard, Users, Settings, LogOut } from "lucide-react"
+// Removed Calendar, CreditCard, Settings icons as pages are removed for now
+import { Home, User, FileText, Users as AdminUsersIcon, Settings as GuildsIcon, LogOut } from "lucide-react" 
 import Image from "next/image"
 import Link from "next/link"
+import { useEffect } from "react" // Import useEffect for redirecting unauthenticated users
 
 export default function DashboardLayout({
   children,
@@ -27,24 +28,48 @@ export default function DashboardLayout({
   children: React.ReactNode
 }) {
   const pathname = usePathname()
-  const [isAdmin, setIsAdmin] = useState(true) // This would come from auth context in a real app
+  const router = useRouter()
+  const { data: session, status } = useSession() // Get session data and status
 
-  const userNavItems = [
+  // Redirect to login if not authenticated
+  useEffect(() => {
+    if (status === "unauthenticated") {
+      router.push("/")
+    }
+  }, [status, router])
+
+  // Determine if user is admin based on session role
+  const isAdmin = session?.user?.role === 'admin'
+
+  // Define navigation items based on role
+  const baseNavItems = [
     { href: "/dashboard", label: "Dashboard", icon: Home },
     { href: "/dashboard/profile", label: "My Profile", icon: User },
     { href: "/dashboard/documents", label: "Documents", icon: FileText },
-    { href: "/dashboard/calendar", label: "Calendar", icon: Calendar },
-    { href: "/dashboard/payments", label: "Payments", icon: CreditCard },
+    // Removed Calendar and Payments links for now
   ]
 
-  const adminNavItems = [
-    ...userNavItems,
-    { href: "/dashboard/users", label: "Users", icon: Users },
-    { href: "/dashboard/guilds", label: "Guilds", icon: Users },
-    { href: "/dashboard/settings", label: "Settings", icon: Settings },
+  const adminOnlyNavItems = [
+    // Corrected paths for admin pages
+    { href: "/dashboard/admin/users", label: "Users", icon: AdminUsersIcon }, 
+    { href: "/dashboard/admin/guilds", label: "Guilds", icon: GuildsIcon }, 
+    // Removed Settings link for now
   ]
 
-  const navItems = isAdmin ? adminNavItems : userNavItems
+  const navItems = isAdmin ? [...baseNavItems, ...adminOnlyNavItems] : baseNavItems
+
+  // Handle loading state
+  if (status === "loading") {
+    return <div className="flex justify-center items-center min-h-screen">Loading session...</div>;
+  }
+  
+  // If unauthenticated after check (should be redirected by useEffect, but as fallback)
+  if (status === "unauthenticated") {
+     return null; // Or a message indicating redirection
+  }
+
+  // Get user name or email for display
+  const userName = session?.user?.name || session?.user?.email || "User"
 
   return (
     <SidebarProvider>
@@ -52,7 +77,8 @@ export default function DashboardLayout({
         <Sidebar>
           <SidebarHeader className="flex items-center px-4 py-2">
             <div className="flex items-center space-x-2">
-              <Image src="/dashboard-icon.png" alt="St. Agnes Parish" width={40} height={40} className="rounded-full" />
+              {/* Corrected image path */}
+              <Image src="/dashboard%20icon.png" alt="St. Agnes Parish" width={40} height={40} className="rounded-full" />
               <div className="font-semibold">St. Agnes Parish</div>
             </div>
           </SidebarHeader>
@@ -73,7 +99,13 @@ export default function DashboardLayout({
           <SidebarFooter className="p-4">
             <div className="flex items-center justify-between">
               <ModeToggle />
-              <Button variant="ghost" size="icon">
+              {/* Added onClick handler for logout */}
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                onClick={() => signOut({ callbackUrl: '/' })}
+                aria-label="Log out"
+              >
                 <LogOut className="h-5 w-5" />
               </Button>
             </div>
@@ -84,28 +116,14 @@ export default function DashboardLayout({
           <header className="border-b p-4 flex items-center justify-between">
             <div className="flex items-center">
               <SidebarTrigger className="mr-2" />
-              <h1 className="text-xl font-semibold">
-                {pathname === "/dashboard"
-                  ? "Dashboard"
-                  : pathname === "/dashboard/profile"
-                    ? "My Profile"
-                    : pathname === "/dashboard/documents"
-                      ? "Documents"
-                      : pathname === "/dashboard/calendar"
-                        ? "Calendar"
-                        : pathname === "/dashboard/payments"
-                          ? "Payments"
-                          : pathname === "/dashboard/users"
-                            ? "Users"
-                            : pathname === "/dashboard/guilds"
-                              ? "Guilds"
-                              : pathname === "/dashboard/settings"
-                                ? "Settings"
-                                : "Dashboard"}
+              {/* Simplified header title logic - consider deriving from navItems */}
+              <h1 className="text-xl font-semibold capitalize">
+                 {navItems.find(item => item.href === pathname)?.label || pathname.split('/').pop()?.replace('-', ' ') || 'Dashboard'}
               </h1>
             </div>
             <div className="flex items-center space-x-2">
-              <span className="text-sm font-medium">John Doe</span>
+              {/* Display dynamic user name/email */}
+              <span className="text-sm font-medium">{userName}</span>
             </div>
           </header>
           <main className="flex-1 p-6 overflow-auto">{children}</main>

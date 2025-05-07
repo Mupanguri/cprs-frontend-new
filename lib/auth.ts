@@ -1,7 +1,7 @@
 import type { NextAuthOptions } from "next-auth"
 import CredentialsProvider from "next-auth/providers/credentials"
 import bcrypt from "bcrypt"
-import { db } from "@/lib/db"
+import { prisma } from '@/lib/prisma'
 
 export const authOptions: NextAuthOptions = {
   session: {
@@ -20,26 +20,36 @@ export const authOptions: NextAuthOptions = {
         }
 
         try {
-          // In a real app, you would query your database here
-          const user = await db.query(
-            "SELECT user_id, email, password_hash, role FROM users JOIN user_roles ON users.user_id = user_roles.user_id WHERE email = $1",
-            [credentials.email],
-          )
+          const user = await prisma.user.findUnique({
+            where: { email: credentials.email },
+            include: {
+              roles: {
+                select: { role: true },
+                // If you expect multiple roles and want to pass them all, adjust this.
+                // For now, taking the first role to somewhat match original logic.
+              },
+            },
+          })
 
-          if (!user.rows.length) {
+          if (!user || !user.passwordHash) {
+            // User not found or password not set
             return null
           }
 
-          const passwordMatch = await bcrypt.compare(credentials.password, user.rows[0].password_hash)
+          const passwordMatch = await bcrypt.compare(credentials.password, user.passwordHash)
 
           if (!passwordMatch) {
             return null
           }
 
+          // Determine the role to pass. If multiple roles, decide on a strategy.
+          // For simplicity, using the first role if available, or a default/null.
+          const userRole = user.roles.length > 0 ? user.roles[0].role : "member" // Default to 'member' or handle as needed
+
           return {
-            id: user.rows[0].user_id.toString(),
-            email: user.rows[0].email,
-            role: user.rows[0].role,
+            id: user.id,
+            email: user.email,
+            role: userRole, // Pass the determined role
           }
         } catch (error) {
           console.error("Auth error:", error)

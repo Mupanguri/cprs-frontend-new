@@ -3,6 +3,7 @@
 
 generator client {
   provider = "prisma-client-js"
+  output   = "../node_modules/.prisma/client"
 }
 
 datasource db {
@@ -21,6 +22,7 @@ model User {
   payments      Payment[]
   profile       FamilyCensus?
   otpCode       OtpCode?
+  passwordSetupToken PasswordSetupToken? // Added relation for password setup
 }
 
 model UserRole {
@@ -135,4 +137,13 @@ model OtpCode {
   createdAt DateTime @default(now())
   expiresAt DateTime
   user      User     @relation(fields: [email], references: [email], onDelete: Cascade)
+}
+
+model PasswordSetupToken {
+  id        String   @id @default(cuid())
+  token     String   @unique // This will store the HASHED token
+  userId    String   @unique
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt DateTime
+  createdAt DateTime @default(now())
 }
