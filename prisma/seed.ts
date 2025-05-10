@@ -7,22 +7,24 @@ async function main() {
   console.log(`Start seeding ...`)
 
   const adminEmail = process.env.ADMIN_EMAIL || 'admin@example.com';
-  // IMPORTANT: Use a strong password and consider setting it via environment variable
-  const adminPassword = process.env.ADMIN_PASSWORD || 'password123'; 
+  // Set the desired password directly here
+  const adminPassword = 'Password123!'; // Or use process.env.ADMIN_PASSWORD
 
   if (adminPassword.length < 8) {
-      console.error("Admin password must be at least 8 characters long. Seeding aborted.");
-      return;
-  }
+      console.error("Admin password must be at least 8 characters long. Seeding aborted."); // Keep check
+       return;
+   }
+ 
+   // Generate the hash using the application's bcrypt library
+   const hashedPassword = await bcrypt.hash(adminPassword, 10); 
+   console.log(`Generated hash for password: ${hashedPassword}`); // Log the hash
 
-  const hashedPassword = await bcrypt.hash(adminPassword, 10); // Salt rounds: 10
-
-  // Create or update the admin user
+  // Create or update the admin user, ensuring the hash is updated
   const adminUser = await prisma.user.upsert({
     where: { email: adminEmail },
-    update: {
-        // Optionally update password if user exists? For seeding, maybe not.
-        // passwordHash: hashedPassword, 
+    // Ensure passwordHash is updated if the user exists
+    update: { 
+        passwordHash: hashedPassword, 
     },
     create: {
       email: adminEmail,

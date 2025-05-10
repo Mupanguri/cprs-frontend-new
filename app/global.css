@@ -3,85 +3,14 @@
 
 @custom-variant dark (&:is(.dark *));
 
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss/base";
+@import "tailwindcss/components";
+@import "tailwindcss/utilities";
 
-@layer base {
-  :root {
-    --background: 0 0% 100%;
-    --foreground: 240 10% 3.9%;
-    --card: 0 0% 100%;
-    --card-foreground: 240 10% 3.9%;
-    --popover: 0 0% 100%;
-    --popover-foreground: 240 10% 3.9%;
-    --primary: 271.4 76.8% 53.3%;
-    --primary-foreground: 0 0% 98%;
-    --secondary: 240 4.8% 95.9%;
-    --secondary-foreground: 240 5.9% 10%;
-    --muted: 240 4.8% 95.9%;
-    --muted-foreground: 240 3.8% 46.1%;
-    --accent: 240 4.8% 95.9%;
-    --accent-foreground: 240 5.9% 10%;
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 0 0% 98%;
-    --border: 240 5.9% 90%;
-    --input: 240 5.9% 90%;
-    --ring: 271.4 76.8% 53.3%;
-    --radius: 0.5rem;
-
-    /* Sidebar variables */
-    --sidebar-background: 0 0% 98%;
-    --sidebar-foreground: 240 5.3% 26.1%;
-    --sidebar-primary: 240 5.9% 10%;
-    --sidebar-primary-foreground: 0 0% 98%;
-    --sidebar-accent: 240 4.8% 95.9%;
-    --sidebar-accent-foreground: 240 5.9% 10%;
-    --sidebar-border: 220 13% 91%;
-    --sidebar-ring: 217.2 91.2% 59.8%;
-  }
-
-  .dark {
-    --background: 240 10% 3.9%;
-    --foreground: 0 0% 98%;
-    --card: 240 10% 3.9%;
-    --card-foreground: 0 0% 98%;
-    --popover: 240 10% 3.9%;
-    --popover-foreground: 0 0% 98%;
-    --primary: 271.4 76.8% 53.3%;
-    --primary-foreground: 0 0% 98%;
-    --secondary: 240 3.7% 15.9%;
-    --secondary-foreground: 0 0% 98%;
-    --muted: 240 3.7% 15.9%;
-    --muted-foreground: 240 5% 64.9%;
-    --accent: 240 3.7% 15.9%;
-    --accent-foreground: 0 0% 98%;
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 0 0% 98%;
-    --border: 240 3.7% 15.9%;
-    --input: 240 3.7% 15.9%;
-    --ring: 271.4 76.8% 53.3%;
-
-    /* Sidebar variables */
-    --sidebar-background: 240 5.9% 10%;
-    --sidebar-foreground: 240 4.8% 95.9%;
-    --sidebar-primary: 0 0% 98%;
-    --sidebar-primary-foreground: 240 5.9% 10%;
-    --sidebar-accent: 240 3.7% 15.9%;
-    --sidebar-accent-foreground: 240 4.8% 95.9%;
-    --sidebar-border: 240 3.7% 15.9%;
-    --sidebar-ring: 217.2 91.2% 59.8%;
-  }
-}
-
-@layer base {
-  * {
-    @apply border-border;
-  }
-  body {
-    @apply bg-background text-foreground;
-  }
-}
+/* 
+  The HSL-based theme definitions have been removed.
+  The project will now exclusively use the OKLCH-based theme defined below.
+*/
 
 /* Liturgical colors */
 .color-purple {
@@ -147,7 +76,7 @@
 }
 
 :root {
-  --radius: 0.625rem;
+  --radius: 0.625rem; /* Or your preferred radius value */
   --background: oklch(1 0 0);
   --foreground: oklch(0.145 0 0);
   --card: oklch(1 0 0);
@@ -179,6 +108,14 @@
   --sidebar-accent-foreground: oklch(0.205 0 0);
   --sidebar-border: oklch(0.922 0 0);
   --sidebar-ring: oklch(0.708 0 0);
+
+  /* Liturgical Color Components - Light Theme */
+  --liturgical-purple-l: 0.55; --liturgical-purple-c: 0.22; --liturgical-purple-h: 295;
+  --liturgical-white-l: 1;    --liturgical-white-c: 0;    --liturgical-white-h: 0;
+  --liturgical-gold-l: 0.75;  --liturgical-gold-c: 0.18;  --liturgical-gold-h: 85;
+  --liturgical-green-l: 0.58; --liturgical-green-c: 0.15; --liturgical-green-h: 145;
+  --liturgical-red-l: 0.55;   --liturgical-red-c: 0.23;   --liturgical-red-h: 25;
+  --liturgical-black-l: 0;    --liturgical-black-c: 0;    --liturgical-black-h: 0;
 }
 
 .dark {
@@ -213,11 +150,19 @@
   --sidebar-accent-foreground: oklch(0.985 0 0);
   --sidebar-border: oklch(1 0 0 / 10%);
   --sidebar-ring: oklch(0.556 0 0);
+
+  /* Liturgical Color Components - Dark Theme */
+  --liturgical-purple-l: 0.65; --liturgical-purple-c: 0.20; --liturgical-purple-h: 295;
+  --liturgical-white-l: 0.92;  --liturgical-white-c: 0.01;  --liturgical-white-h: 0;    /* Off-white */
+  --liturgical-gold-l: 0.80;  --liturgical-gold-c: 0.17;  --liturgical-gold-h: 85;
+  --liturgical-green-l: 0.62; --liturgical-green-c: 0.14; --liturgical-green-h: 145;
+  --liturgical-red-l: 0.60;   --liturgical-red-c: 0.22;   --liturgical-red-h: 25;
+  --liturgical-black-l: 0.15; --liturgical-black-c: 0.01; --liturgical-black-h: 0;    /* Dark Gray */
 }
 
 @layer base {
   * {
-    @apply border-border outline-ring/50;
+    @apply border-border outline-ring/50; /* Keep the latest '*' rule */
   }
   body {
     @apply bg-background text-foreground;

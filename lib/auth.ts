@@ -20,6 +20,7 @@ export const authOptions: NextAuthOptions = {
         }
 
         try {
+          console.log(`Attempting login for email: ${credentials.email}`); // Log attempt
           const user = await prisma.user.findUnique({
             where: { email: credentials.email },
             include: {
@@ -31,16 +32,25 @@ export const authOptions: NextAuthOptions = {
             },
           })
 
-          if (!user || !user.passwordHash) {
-            // User not found or password not set
-            return null
+          if (!user) {
+            console.log(`Login failed: User not found for email ${credentials.email}`);
+            return null // User not found
+          }
+          
+          if (!user.passwordHash) {
+             console.log(`Login failed: User ${credentials.email} found but passwordHash is null.`);
+             return null // Password not set (e.g., pending setup)
           }
 
+          console.log(`User found for ${credentials.email}, comparing password...`);
           const passwordMatch = await bcrypt.compare(credentials.password, user.passwordHash)
 
           if (!passwordMatch) {
-            return null
+            console.log(`Login failed: Password mismatch for email ${credentials.email}`);
+            return null // Password doesn't match
           }
+          
+          console.log(`Login successful for email ${credentials.email}`);
 
           // Determine the role to pass. If multiple roles, decide on a strategy.
           // For simplicity, using the first role if available, or a default/null.

@@ -1,7 +1,7 @@
 import type React from "react"
 import type { Metadata } from "next"
 import { Inter } from "next/font/google"
-import "/globals.css"
+import "./global.css" // Corrected import path
 import { ThemeProvider } from "@/components/theme-provider"
 import SessionProviderWrapper from "@/components/SessionProviderWrapper" // Import the wrapper
 
