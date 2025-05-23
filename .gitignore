@@ -40,8 +40,5 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 # local env files
-echo "node_modules
-.next
-.env
 .env.local
-.DS_Store" > .gitignore
+.DS_Store

@@ -5,7 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 // Removed CreditCard icon, added CalendarDays, Megaphone
-import { Users, FileText, AlertCircle, CalendarDays, Megaphone } from "lucide-react" 
+import { Users, FileText, AlertCircle, CalendarDays, Megaphone } from "lucide-react"
 import Link from "next/link"
 
 // Define type for the summary data
@@ -17,8 +17,9 @@ type DashboardSummaryData = {
     balance: number;
     statusText: string;
   };
-  upcomingEvents: any[]; // Placeholder type
-  guildAnnouncements: any[]; // Placeholder type
+  upcomingEvents: any[] | string; // Can be array or message
+  guildAnnouncements: any[] | string; // Can be array or message
+  profileComplete?: boolean; // Add profile completion status
 };
 
 export default function Dashboard() {
@@ -63,7 +64,7 @@ export default function Dashboard() {
         </div>
      );
   }
-  
+   
   // Handle case where data might be null even if fetch succeeded (e.g., API logic)
   if (!summaryData) {
      return (
@@ -76,12 +77,14 @@ export default function Dashboard() {
 
   return (
     <div className="space-y-6">
-      {/* TODO: Make this alert dynamic based on profile completion status */}
-      <Alert>
-        <AlertCircle className="h-4 w-4" />
-        <AlertTitle>Welcome to your dashboard</AlertTitle>
-        <AlertDescription>Please complete your profile and select your guild to access all features.</AlertDescription>
-      </Alert>
+      {/* Dynamic alert based on profile completion status */}
+      {summaryData.profileComplete === false && (
+        <Alert>
+          <AlertCircle className="h-4 w-4" />
+          <AlertTitle>Complete your profile</AlertTitle>
+          <AlertDescription>Please complete your profile and select your guild to access all features.</AlertDescription>
+        </Alert>
+      )}
 
       {/* Summary Cards */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
@@ -96,8 +99,8 @@ export default function Dashboard() {
             <p className="text-xs text-muted-foreground">{summaryData.guildStatus}</p>
             {/* Link to view guild details - maybe disable if no guild or link to profile/guild selection? */}
             <Button disabled={!summaryData.guildName} asChild className="w-full mt-4" variant="outline" size="sm">
-              {/* TODO: Update href if a user-facing guild page exists */}
-              <Link href="#">View Guild Details</Link> 
+              {/* Update href if a user-facing guild page exists */}
+              <Link href={summaryData.guildName ? `/guilds/${summaryData.guildName}` : "#"}>View Guild Details</Link>
             </Button>
           </CardContent>
         </Card>
@@ -144,13 +147,17 @@ export default function Dashboard() {
             <CardDescription>Next events in your calendar</CardDescription>
           </CardHeader>
           <CardContent>
-            {summaryData.upcomingEvents.length > 0 ? (
-              <div className="space-y-4">
-                {/* TODO: Map over summaryData.upcomingEvents */}
-                <p className="text-sm text-muted-foreground">Event data not yet implemented.</p>
-              </div>
+            {typeof summaryData.upcomingEvents === 'string' ? (
+              <p className="text-sm text-muted-foreground">{summaryData.upcomingEvents}</p>
             ) : (
-              <p className="text-sm text-muted-foreground">No upcoming events found.</p>
+              <div className="space-y-4">
+                {summaryData.upcomingEvents.map((event) => (
+                  <div key={event.id}>
+                    <p className="font-medium">{event.name}</p>
+                    <p className="text-sm text-muted-foreground">{new Date(event.startDate).toLocaleDateString()}</p>
+                  </div>
+                ))}
+              </div>
             )}
           </CardContent>
         </Card>
@@ -162,13 +169,17 @@ export default function Dashboard() {
             <CardDescription>Latest updates from your guild</CardDescription>
           </CardHeader>
           <CardContent>
-             {summaryData.guildAnnouncements.length > 0 ? (
-              <div className="space-y-4">
-                 {/* TODO: Map over summaryData.guildAnnouncements */}
-                 <p className="text-sm text-muted-foreground">Announcement data not yet implemented.</p>
-              </div>
+             {typeof summaryData.guildAnnouncements === 'string' ? (
+              <p className="text-sm text-muted-foreground">{summaryData.guildAnnouncements}</p>
             ) : (
-              <p className="text-sm text-muted-foreground">No announcements found.</p>
+              <div className="space-y-4">
+                {summaryData.guildAnnouncements.map((announcement) => (
+                  <div key={announcement.id}>
+                    <p className="font-medium">{announcement.title}</p>
+                    <p className="text-sm text-muted-foreground">{announcement.content}</p>
+                  </div>
+                ))}
+              </div>
             )}
           </CardContent>
         </Card>

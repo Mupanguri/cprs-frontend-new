@@ -1,113 +1,142 @@
 -- Users table
-CREATE TABLE IF NOT EXISTS users (
-  user_id SERIAL PRIMARY KEY,
+CREATE TABLE IF NOT EXISTS Users (
+  userId SERIAL PRIMARY KEY,
   email VARCHAR(255) UNIQUE NOT NULL,
-  password_hash VARCHAR(255),
-  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+  passwordHash VARCHAR(255),
+  createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
 -- User roles table
-CREATE TABLE IF NOT EXISTS user_roles (
-  role_id SERIAL PRIMARY KEY,
-  user_id INTEGER REFERENCES users(user_id) ON DELETE CASCADE,
+CREATE TABLE IF NOT EXISTS UserRoles (
+  roleId SERIAL PRIMARY KEY,
+  userId INTEGER REFERENCES Users(userId) ON DELETE CASCADE,
   role VARCHAR(50) NOT NULL,
-  UNIQUE(user_id, role)
+  createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  UNIQUE(userId, role)
 );
 
+CREATE INDEX IF NOT EXISTS UserRoles_userId_idx ON UserRoles (userId);
+
 -- Guilds table
-CREATE TABLE IF NOT EXISTS guilds (
-  guild_id SERIAL PRIMARY KEY,
-  guild_name VARCHAR(255) UNIQUE NOT NULL,
+CREATE TABLE IF NOT EXISTS Guilds (
+  guildId SERIAL PRIMARY KEY,
+  guildName VARCHAR(255) UNIQUE NOT NULL,
   description TEXT,
-  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+  createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
 -- User guilds table
-CREATE TABLE IF NOT EXISTS user_guilds (
-  user_guild_id SERIAL PRIMARY KEY,
-  user_id INTEGER REFERENCES users(user_id) ON DELETE CASCADE,
-  guild_id INTEGER REFERENCES guilds(guild_id) ON DELETE CASCADE,
-  joined_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  UNIQUE(user_id, guild_id)
+CREATE TABLE IF NOT EXISTS UserGuilds (
+  userGuildId SERIAL PRIMARY KEY,
+  userId INTEGER REFERENCES Users(userId) ON DELETE CASCADE,
+  guildId INTEGER REFERENCES Guilds(guildId) ON DELETE CASCADE,
+  joinedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  UNIQUE(userId, guildId)
 );
 
+CREATE INDEX IF NOT EXISTS UserGuilds_userId_idx ON UserGuilds (userId);
+CREATE INDEX IF NOT EXISTS UserGuilds_guildId_idx ON UserGuilds (guildId);
+
 -- Fees table
-CREATE TABLE IF NOT EXISTS fees (
-  fee_id SERIAL PRIMARY KEY,
-  guild_id INTEGER REFERENCES guilds(guild_id) ON DELETE CASCADE,
+CREATE TABLE IF NOT EXISTS Fees (
+  feeId SERIAL PRIMARY KEY,
+  guildId INTEGER REFERENCES Guilds(guildId) ON DELETE CASCADE,
   description VARCHAR(255) NOT NULL,
   amount DECIMAL(10, 2) NOT NULL,
   frequency VARCHAR(50) NOT NULL,
-  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+  createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
+
+CREATE INDEX IF NOT EXISTS Fees_guildId_idx ON Fees (guildId);
 
 -- Payments table
-CREATE TABLE IF NOT EXISTS payments (
-  payment_id SERIAL PRIMARY KEY,
-  user_id INTEGER REFERENCES users(user_id) ON DELETE CASCADE,
-  fee_id INTEGER REFERENCES fees(fee_id) ON DELETE CASCADE,
-  amount_paid DECIMAL(10, 2) NOT NULL,
-  payment_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  receipt_number VARCHAR(100),
-  payment_method VARCHAR(50),
-  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+CREATE TABLE IF NOT EXISTS Payments (
+  paymentId SERIAL PRIMARY KEY,
+  userId INTEGER REFERENCES Users(userId) ON DELETE CASCADE,
+  feeId INTEGER REFERENCES Fees(feeId) ON DELETE CASCADE,
+  amountPaid DECIMAL(10, 2) NOT NULL,
+  paymentDate TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  receiptNumber VARCHAR(100),
+  paymentMethod VARCHAR(50),
+  createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
+
+CREATE INDEX IF NOT EXISTS Payments_userId_idx ON Payments (userId);
+CREATE INDEX IF NOT EXISTS Payments_feeId_idx ON Payments (feeId);
 
 -- Documents table
-CREATE TABLE IF NOT EXISTS documents (
-  document_id SERIAL PRIMARY KEY,
-  guild_id INTEGER REFERENCES guilds(guild_id) ON DELETE SET NULL,
+CREATE TABLE IF NOT EXISTS Documents (
+  documentId SERIAL PRIMARY KEY,
+  guildId INTEGER REFERENCES Guilds(guildId) ON DELETE SET NULL,
   name VARCHAR(255) NOT NULL,
   description TEXT,
-  file_url TEXT NOT NULL,
-  file_type VARCHAR(50) NOT NULL,
-  file_size INTEGER NOT NULL,
-  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+  fileUrl TEXT NOT NULL,
+  fileType VARCHAR(50) NOT NULL,
+  fileSize INTEGER NOT NULL,
+  createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
+CREATE INDEX IF NOT EXISTS Documents_guildId_idx ON Documents (guildId);
+
 -- Family census table
-CREATE TABLE IF NOT EXISTS family_census (
-  census_id SERIAL PRIMARY KEY,
-  user_id INTEGER REFERENCES users(user_id) ON DELETE CASCADE UNIQUE,
+CREATE TABLE IF NOT EXISTS FamilyCensus (
+  censusId SERIAL PRIMARY KEY,
+  userId INTEGER REFERENCES Users(userId) ON DELETE CASCADE UNIQUE,
   title VARCHAR(20),
-  first_name VARCHAR(100) NOT NULL,
-  middle_name VARCHAR(100),
+  firstName VARCHAR(100) NOT NULL,
+  middleName VARCHAR(100),
   surname VARCHAR(100) NOT NULL,
   gender VARCHAR(20),
-  date_of_birth DATE,
-  marital_status VARCHAR(50),
-  type_of_marriage VARCHAR(50),
-  place_of_marriage VARCHAR(255),
-  marriage_number VARCHAR(50),
-  married_to VARCHAR(255),
+  dateOfBirth DATE,
+  maritalStatus VARCHAR(50),
+  typeOfMarriage VARCHAR(50),
+  placeOfMarriage VARCHAR(255),
+  marriageNumber VARCHAR(50),
+  marriedTo VARCHAR(255),
   address TEXT,
-  phone_cell_number VARCHAR(50),
-  section_name VARCHAR(100),
-  email_address VARCHAR(255) NOT NULL,
-  place_of_baptism VARCHAR(255),
-  baptism_number VARCHAR(50),
+  phoneCellNumber VARCHAR(50),
+  sectionName VARCHAR(100),
+  emailAddress VARCHAR(255) NOT NULL,
+  placeOfBaptism VARCHAR(255),
+  baptismNumber VARCHAR(50),
   groupsGuild VARCHAR(100),
   occupation VARCHAR(100),
   skills TEXT,
   profession VARCHAR(100),
-  church_support_card VARCHAR(50),
-  last_paid DATE,
-  any_other_comments TEXT,
-  date_of_submission TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+  churchSupportCard VARCHAR(50),
+  lastPaid DATE,
+  anyOtherComments TEXT,
+  dateOfSubmission TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
+CREATE INDEX IF NOT EXISTS FamilyCensus_userId_idx ON FamilyCensus (userId);
+
 -- OTP codes table
-CREATE TABLE IF NOT EXISTS otp_codes (
-  otp_id SERIAL PRIMARY KEY,
-  email VARCHAR(255) UNIQUE NOT NULL,
+CREATE TABLE IF NOT EXISTS OtpCodes (
+  otpId SERIAL PRIMARY KEY,
+  email VARCHAR(255) NOT NULL,
   otp VARCHAR(10) NOT NULL,
-  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  expires_at TIMESTAMP NOT NULL
+  createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  expiresAt TIMESTAMP NOT NULL
 );
+
+-- Password setup tokens table
+CREATE TABLE IF NOT EXISTS PasswordSetupTokens (
+  passwordSetupTokenId SERIAL PRIMARY KEY,
+  userId INTEGER REFERENCES Users(userId) ON DELETE CASCADE NOT NULL,
+  token VARCHAR(255) NOT NULL,
+  createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  expiresAt TIMESTAMP NOT NULL
+);
+
+CREATE INDEX IF NOT EXISTS PasswordSetupTokens_userId_idx ON PasswordSetupTokens (userId);

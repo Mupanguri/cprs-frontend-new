@@ -18,30 +18,100 @@ export async function GET() {
       where: { userId: userId },
       include: {
         guild: {
-          select: { name: true } // Select only the guild name
+          select: { name: true, id: true } // Select guild name and id
         }
       }
     });
 
+    let guildStatus = "No Guild Assigned";
+    if (userGuild) {
+      if (userGuild.isActive) {
+        guildStatus = "Active Member";
+      } else if (userGuild.isPending) {
+        guildStatus = "Pending Approval";
+      } else {
+        guildStatus = "Inactive Member";
+      }
+    }
+
     // Fetch document count
     const documentCount = await prisma.document.count({
-      // Add where clause if filtering is needed (e.g., parish-wide vs guild-specific)
+      where: {
+        guildId: userGuild?.guild?.id, // Only count documents for the user's guild
+      }
     });
 
-    // TODO: Fetch payment status (requires more complex logic involving Fees and Payments)
-    // TODO: Fetch upcoming events (requires Event model)
-    // TODO: Fetch guild announcements (requires Announcement model)
+    // Fetch payment status
+    let balance = 0;
+    let statusText = "Up to date";
+    const payments = await prisma.payment.findMany({
+      where: { userId: userId },
+      orderBy: { paymentDate: 'desc' },
+    });
+
+    // Fetch all fees, including those not associated with a guild
+    const fees = await prisma.fee.findMany({});
+
+    payments.forEach(payment => {
+      balance += Number(payment.amountPaid);
+    });
+
+    fees.forEach(fee => {
+      balance -= Number(fee.amount);
+    });
+
+    if (balance < 0) {
+      statusText = "Overdue";
+    }
+
+    const paymentStatus = {
+      balance: balance,
+      statusText: statusText,
+    };
+
+    // Fetch upcoming events
+    const now = new Date();
+    const upcomingEvents = await prisma.event.findMany({
+      where: {
+        guildId: userGuild?.guild?.id,
+        startDate: {
+          gte: now,
+        },
+      },
+      orderBy: {
+        startDate: 'asc',
+      },
+      take: 5, // Limit to 5 upcoming events
+    });
+
+    let upcomingEventsMessage = "";
+    if (upcomingEvents.length === 0) {
+      upcomingEventsMessage = "No upcoming events";
+    }
+
+    // Fetch guild announcements
+    const guildAnnouncements = await prisma.announcement.findMany({
+      where: {
+        guildId: userGuild?.guild?.id,
+      },
+      orderBy: {
+        createdAt: 'desc',
+      },
+      take: 3, // Limit to 3 latest announcements
+    });
+
+    let guildAnnouncementsMessage = "";
+    if (guildAnnouncements.length === 0) {
+      guildAnnouncementsMessage = "No guild announcements";
+    }
 
     const summaryData = {
       guildName: userGuild?.guild?.name || null, // User might not be in a guild
-      guildStatus: userGuild ? "Active Member" : "No Guild Assigned", // Example status
+      guildStatus: guildStatus,
       documentCount: documentCount,
-      paymentStatus: { // Placeholder
-          balance: 0.00, 
-          statusText: "Up to date" 
-      }, 
-      upcomingEvents: [], // Placeholder
-      guildAnnouncements: [], // Placeholder
+      paymentStatus: paymentStatus,
+      upcomingEvents: upcomingEvents.length > 0 ? upcomingEvents : upcomingEventsMessage,
+      guildAnnouncements: guildAnnouncements.length > 0 ? guildAnnouncements : guildAnnouncementsMessage,
     };
 
     return NextResponse.json(summaryData, { status: 200 })

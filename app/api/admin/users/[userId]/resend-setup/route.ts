@@ -31,22 +31,19 @@ export async function POST(req: NextRequest, context: RouteContext) {
     // Find the user to ensure they exist
     const user = await prisma.user.findUnique({
       where: { id: userId },
-      select: { email: true, firstName: true } // Select necessary fields from related profile
+      select: { email: true, passwordHash: true, profile: { select: { firstName: true } } }
     });
-    
-    // Fetch profile separately as it's a 1-to-1 relation
-     const profile = await prisma.familyCensus.findUnique({
-         where: { userId: userId },
-         select: { firstName: true }
-     });
 
     if (!user) {
       return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
+
+    // Check if user already has a password set
+    if (user.passwordHash) {
+      return NextResponse.json({ message: "User has already set their password. Redirect them to the login page." }, { status: 200 });
+    }
     
-    // Optional: Check if user already has a password set? 
-    // Maybe allow resend even if password exists, effectively acting as a password reset trigger?
-    // For now, let's allow it.
+    const userFirstName = user.profile?.firstName || 'User';
 
     // Generate new password setup token
     const plainSetupToken = crypto.randomBytes(32).toString('hex');
@@ -70,8 +67,6 @@ export async function POST(req: NextRequest, context: RouteContext) {
         });
 
         // Send Password Setup Email
-        const userFirstName = profile?.firstName || 'User'; // Use profile name or fallback
-        // TODO: Update your domain and path for the set-password page
         const setupLink = `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/set-password?token=${plainSetupToken}`;
         const emailSubject = "Set Up Your St. Agnes Parish Account Password";
         const emailHtml = `

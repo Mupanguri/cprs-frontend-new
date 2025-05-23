@@ -20,6 +20,18 @@ export default function Home() {
 
   const handleLogin = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
+
+    // Client-side validation
+    if (!email) {
+      setError("Email is required.")
+      return
+    }
+
+    if (!password) {
+      setError("Password is required.")
+      return
+    }
+
     setError(null)
     setIsLoading(true)
 
@@ -55,7 +67,7 @@ export default function Home() {
       <div className="w-full max-w-md space-y-8">
         <div className="flex flex-col items-center space-y-2">
           {/* Corrected image path assuming 'dashboard icon.png' in public */}
-          <Image src="/dashboard%20icon.png" alt="St. Agnes Parish" width={120} height={120} className="rounded-full" />
+          <Image src="/public/dashboard_icon.png" alt="St. Agnes Parish" width={120} height={120} className="rounded-full" />
           <h1 className="text-2xl font-bold">St. Agnes Parish</h1>
           <p className="text-muted-foreground text-center">Welcome to the St. Agnes Parish Management System</p>
         </div>

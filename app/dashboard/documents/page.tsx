@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button"
 import { FileText, Download, AlertCircle } from "lucide-react" // Added AlertCircle
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert" // Added Alert components
 import Link from "next/link" // Import Link for download button
+import { ChevronLeft, ChevronRight } from "lucide-react";
 
 // Define type for Document based on Prisma schema
 type Document = {
@@ -21,22 +22,31 @@ type Document = {
   // guild?: { name: string }; // If guild info is included in API response
 };
 
+type DocumentResponse = {
+  documents: Document[];
+  totalPages: number;
+  currentPage: number;
+}
+
 export default function DocumentsPage() {
   const [documents, setDocuments] = useState<Document[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
 
   useEffect(() => {
     const fetchDocuments = async () => {
       setIsLoading(true);
       setError(null);
       try {
-        const response = await fetch("/api/documents");
+        const response = await fetch(`/api/documents?page=${currentPage}`);
         if (!response.ok) {
           throw new Error("Failed to fetch documents");
         }
-        const data: Document[] = await response.json();
-        setDocuments(data);
+        const data: DocumentResponse = await response.json();
+        setDocuments(data.documents);
+        setTotalPages(data.totalPages);
       } catch (err) {
         console.error("Fetch documents error:", err);
         setError(err instanceof Error ? err.message : "An unknown error occurred");
@@ -45,7 +55,7 @@ export default function DocumentsPage() {
       }
     };
     fetchDocuments();
-  }, []);
+  }, [currentPage]);
 
   // Helper function to format file size
   const formatBytes = (bytes: number, decimals = 2): string => {
@@ -60,6 +70,10 @@ export default function DocumentsPage() {
     const index = Math.min(i, sizes.length - 1); 
     return parseFloat((bytes / Math.pow(k, index)).toFixed(dm)) + ' ' + sizes[index];
   }
+
+  const handlePageChange = (newPage: number) => {
+    setCurrentPage(newPage);
+  };
 
   if (isLoading) {
     return <div className="p-6">Loading documents...</div>;
@@ -78,44 +92,6 @@ export default function DocumentsPage() {
      );
   }
 
-  // Original static documents array - remove this section
-  /*
-  const documents = [
-    {
-      id: 1,
-      title: "Guild Constitution",
-      description: "The official constitution and bylaws of St. Mary's Guild",
-      date: "2024-01-15",
-      fileType: "PDF",
-      fileSize: "1.2 MB",
-    },
-    {
-      id: 2,
-      title: "Guild Prayers",
-      description: "Collection of prayers for guild members",
-      date: "2024-01-15",
-      fileType: "PDF",
-      fileSize: "0.8 MB",
-    },
-    {
-      id: 3,
-      title: "Guild Fee Guidelines",
-      description: "Information about guild membership fees and payment schedules",
-      date: "2024-02-10",
-      fileType: "PDF",
-      fileSize: "0.5 MB",
-    },
-    {
-      id: 4,
-      title: "Parish Calendar 2025",
-      description: "Annual calendar of parish events and liturgical celebrations",
-      date: "2024-11-30",
-      fileType: "PDF",
-      fileSize: "2.1 MB", // This static data is now replaced by fetched data
-    },
-  ]
-  */
-
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -131,17 +107,17 @@ export default function DocumentsPage() {
               </div>
               <div>
                 {/* Use doc.name instead of doc.title */}
-                <CardTitle>{doc.name}</CardTitle> 
+                <CardTitle>{doc.name}</CardTitle>
                 <CardDescription>{doc.description || 'No description available'}</CardDescription>
               </div>
             </CardHeader>
             <CardContent>
               <div className="text-sm text-muted-foreground">
                  {/* Use doc.createdAt instead of doc.date */}
-                <p>Added on: {new Date(doc.createdAt).toLocaleDateString()}</p> 
+                <p>Added on: {new Date(doc.createdAt).toLocaleDateString()}</p>
                 <p>File type: {doc.fileType}</p>
                  {/* Use formatBytes helper for doc.fileSize */}
-                <p>Size: {formatBytes(doc.fileSize)}</p> 
+                <p>Size: {formatBytes(doc.fileSize)}</p>
               </div>
             </CardContent>
             <CardFooter>
@@ -154,6 +130,29 @@ export default function DocumentsPage() {
             </CardFooter>
           </Card>
         ))}
+      </div>
+
+      {/* Pagination Controls */}
+      <div className="flex justify-between items-center">
+        <Button
+          onClick={() => handlePageChange(currentPage - 1)}
+          disabled={currentPage === 1}
+          variant="outline"
+          size="sm"
+        >
+          <ChevronLeft className="mr-2 h-4 w-4" />
+          Previous
+        </Button>
+        <span>Page {currentPage} of {totalPages}</span>
+        <Button
+          onClick={() => handlePageChange(currentPage + 1)}
+          disabled={currentPage === totalPages}
+          variant="outline"
+          size="sm"
+        >
+          Next
+          <ChevronRight className="ml-2 h-4 w-4" />
+        </Button>
       </div>
     </div>
   )
